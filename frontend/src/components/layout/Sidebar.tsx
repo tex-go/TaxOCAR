@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Users2, Upload, ClipboardCheck,
   FileSpreadsheet, Settings, LogOut, Zap, Layers,
 } from "lucide-react";
-import { clearSession, getSession } from "@/lib/auth";
+import { clearSession } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -21,7 +22,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router   = useRouter();
-  const session  = getSession();
+  const { session } = useAuth();
 
   function handleLogout() {
     clearSession();

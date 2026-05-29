@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Users, FileCode2, Key } from "lucide-react";
-import { isAdmin } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 
 const sections = [
   {
@@ -28,7 +28,7 @@ const sections = [
 ];
 
 export default function SettingsPage() {
-  const admin = isAdmin();
+  const { isAdmin: admin } = useAuth();
 
   return (
     <div className="max-w-2xl space-y-3">

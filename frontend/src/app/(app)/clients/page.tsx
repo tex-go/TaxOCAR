@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { Plus, Search, Building2, Pencil, Trash2, FileText, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
 import { clientsApi } from "@/lib/api";
-import { isAdmin } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import type { Client } from "@/types";
 
 function ClientModal({ client, onClose }: { client?: Client; onClose: () => void }) {
@@ -83,7 +83,7 @@ export default function ClientsPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<"new" | Client | null>(null);
-  const admin = isAdmin();
+  const { isAdmin: admin } = useAuth();
 
   const { data: clients = [], isLoading } = useQuery<Client[]>({
     queryKey: ["clients"],

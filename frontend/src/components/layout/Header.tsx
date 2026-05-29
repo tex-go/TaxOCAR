@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
-import { getSession } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 
 const pageMeta: Record<string, { title: string; sub: string }> = {
   "/dashboard":           { title: "Dashboard",        sub: "Overview of your invoice processing activity" },
@@ -22,7 +22,7 @@ export default function Header() {
     ([p]) => pathname === p || pathname.startsWith(p + "/")
   )?.[1] ?? { title: "TaxOCR", sub: "" };
 
-  const session = getSession();
+  const { session } = useAuth();
 
   return (
     <header className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">

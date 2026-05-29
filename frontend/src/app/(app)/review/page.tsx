@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { invoicesApi, clientsApi } from "@/lib/api";
 import { formatCurrency, formatDate, statusColor, statusLabel } from "@/lib/utils";
-import { isReviewer } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import type { Invoice, InvoiceListResponse, Client } from "@/types";
 import InvoiceDetailModal from "@/components/review/InvoiceDetailModal";
 
@@ -37,7 +37,7 @@ const STATUSES = [
 export default function ReviewPage() {
   const searchParams = useSearchParams();
   const qc = useQueryClient();
-  const reviewer = isReviewer();
+  const { isReviewer: reviewer } = useAuth();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");

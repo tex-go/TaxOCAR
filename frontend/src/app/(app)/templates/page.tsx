@@ -7,7 +7,7 @@ import {
   Crosshair, X, Save, Upload, Layers,
 } from "lucide-react";
 import api, { templatesApi } from "@/lib/api";
-import { isAdmin } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import type { Template } from "@/types";
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ function TemplateModal({
   onClose: () => void;
 }) {
   const qc = useQueryClient();
-  const admin = isAdmin();
+  const { isAdmin: admin } = useAuth();
 
   const [form, setForm] = useState({
     name: template?.name ?? "",
@@ -481,7 +481,7 @@ function TemplateModal({
 // ─── templates list page ───────────────────────────────────────────────────────
 export default function TemplatesPage() {
   const qc = useQueryClient();
-  const admin = isAdmin();
+  const { isAdmin: admin } = useAuth();
   const [modal, setModal] = useState<"new" | Template | null>(null);
 
   const { data: templates = [], isLoading } = useQuery<Template[]>({

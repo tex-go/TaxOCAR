@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import api, { invoicesApi } from "@/lib/api";
 import { formatDate, statusColor, statusLabel } from "@/lib/utils";
-import { isReviewer } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 import type { Invoice, AuditLog } from "@/types";
 
 const FIELDS: { key: keyof Invoice; label: string; type?: string }[] = [
@@ -39,7 +39,7 @@ export default function InvoiceDetailModal({
   onUpdate: (updated: Invoice) => void;
 }) {
   const qc = useQueryClient();
-  const reviewer = isReviewer();
+  const { isReviewer: reviewer } = useAuth();
   const [form, setForm] = useState<Partial<Invoice>>({ ...invoice });
   const [showAudit, setShowAudit] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { usersApi } from "@/lib/api";
-import { getSession } from "@/lib/auth";
+import { useAuth } from "@/lib/useAuth";
 
 export default function ProfilePage() {
-  const session = getSession();
+  const { session } = useAuth();
   const [form, setForm] = useState({
     current_password: "",
     new_password: "",
