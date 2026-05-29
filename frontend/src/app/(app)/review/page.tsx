@@ -189,10 +189,11 @@ export default function ReviewPage() {
     columnHelper.accessor("ocr_confidence", {
       header: "Confidence",
       cell: (info) => {
-        const val = info.getValue();
-        if (val == null) return <span className="text-gray-400 text-xs">—</span>;
-        const color = val >= 80 ? "text-green-600" : val >= 60 ? "text-yellow-600" : "text-red-600";
-        return <span className={`text-xs font-medium ${color}`}>{val.toFixed(0)}%</span>;
+        const raw = info.getValue();
+        if (raw == null) return <span className="text-slate-300 text-xs">—</span>;
+        const val = Number(raw);
+        const color = val >= 80 ? "text-emerald-600" : val >= 60 ? "text-amber-600" : "text-red-500";
+        return <span className={`text-xs font-semibold ${color}`}>{val.toFixed(0)}%</span>;
       },
     }),
     columnHelper.display({
