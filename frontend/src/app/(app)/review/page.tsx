@@ -12,13 +12,14 @@ import {
 import toast from "react-hot-toast";
 import {
   Search, Check, X, ChevronLeft, ChevronRight, Eye,
-  AlertTriangle, CheckCircle2, Filter
+  AlertTriangle, CheckCircle2, Sparkles,
 } from "lucide-react";
 import { invoicesApi, clientsApi } from "@/lib/api";
-import { formatCurrency, formatDate, statusColor, statusLabel } from "@/lib/utils";
+import { formatCurrency, statusColor, statusLabel } from "@/lib/utils";
 import { useAuth } from "@/lib/useAuth";
 import type { Invoice, InvoiceListResponse, Client } from "@/types";
 import InvoiceDetailModal from "@/components/review/InvoiceDetailModal";
+import TemplateAnnotationModal from "@/components/upload/TemplateAnnotationModal";
 
 const columnHelper = createColumnHelper<Invoice>();
 
@@ -45,6 +46,7 @@ export default function ReviewPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [openInvoice, setOpenInvoice] = useState<Invoice | null>(null);
+  const [annotateInvoice, setAnnotateInvoice] = useState<Invoice | null>(null);
 
   const { data, isLoading } = useQuery<InvoiceListResponse>({
     queryKey: ["invoices", { page, search, client_id: clientFilter, status: statusFilter }],
@@ -209,7 +211,16 @@ export default function ReviewPage() {
             >
               <Eye className="w-4 h-4" />
             </button>
-            {reviewer && inv.status !== "approved" && inv.status !== "rejected" && (
+            {inv.status === "needs_template" && (
+              <button
+                onClick={() => setAnnotateInvoice(inv)}
+                className="p-1.5 rounded hover:bg-violet-50 text-violet-500"
+                title="Create Template"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+            )}
+            {reviewer && inv.status !== "approved" && inv.status !== "rejected" && inv.status !== "needs_template" && (
               <>
                 <button
                   onClick={() => approveMutation.mutate(inv.id)}
@@ -369,6 +380,21 @@ export default function ReviewPage() {
             setOpenInvoice(updated);
             qc.invalidateQueries({ queryKey: ["invoices"] });
           }}
+        />
+      )}
+
+      {annotateInvoice && (
+        <TemplateAnnotationModal
+          invoice={annotateInvoice}
+          onComplete={() => {
+            setAnnotateInvoice(null);
+            qc.invalidateQueries({ queryKey: ["invoices"] });
+          }}
+          onSkip={() => {
+            setAnnotateInvoice(null);
+            qc.invalidateQueries({ queryKey: ["invoices"] });
+          }}
+          onClose={() => setAnnotateInvoice(null)}
         />
       )}
     </div>

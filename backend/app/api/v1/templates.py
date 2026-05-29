@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 import json
 import io
+import uuid
 
 from app.db.session import get_db
 from app.api.deps import get_current_user, require_admin
 from app.models.user import User
+from app.models.invoice import Invoice
 from app.models.template import InvoiceTemplate
 from app.schemas.template import TemplateCreate, TemplateUpdate, TemplateResponse
 from app.services.storage import StorageService
@@ -131,6 +134,48 @@ def preview_template_sample(
     ext = t.sample_image_path.rsplit(".", 1)[-1].lower() if "." in t.sample_image_path else "jpg"
     content_type = _TMPL_MIME.get(ext, "image/jpeg")
     return StreamingResponse(io.BytesIO(data), media_type=content_type)
+
+
+class FromInvoiceRequest(BaseModel):
+    name: str
+    vendor_gstin: Optional[str] = None
+    vendor_name: Optional[str] = None
+    description: Optional[str] = None
+    coordinates: Optional[Dict[str, Any]] = None
+    patterns: Optional[Dict[str, str]] = None
+
+
+@router.post("/from-invoice/{invoice_id}", response_model=TemplateResponse, status_code=201)
+def create_template_from_invoice(
+    invoice_id: str,
+    req: FromInvoiceRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Create a template linked to an existing invoice file as the sample image.
+    Called from the annotation modal during upload or review.
+    """
+    invoice = db.query(Invoice).filter(
+        Invoice.id == invoice_id, Invoice.org_id == current_user.org_id
+    ).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    template = InvoiceTemplate(
+        org_id=current_user.org_id,
+        name=req.name,
+        vendor_gstin=req.vendor_gstin.upper() if req.vendor_gstin else None,
+        vendor_name=req.vendor_name or None,
+        description=req.description or None,
+        coordinates=req.coordinates or None,
+        patterns=req.patterns or None,
+        sample_image_path=invoice.file_path,  # reuse the invoice file as sample
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return template
 
 
 @router.delete("/{template_id}", status_code=204)

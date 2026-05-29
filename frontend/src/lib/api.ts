@@ -79,6 +79,8 @@ export const invoicesApi = {
   getAuditLog: (id: string) => api.get(`/api/v1/invoices/${id}/audit`),
   getPreviewUrl: (id: string) => api.get(`/api/v1/invoices/${id}/preview-url`),
   preview: (id: string) => api.get(`/api/v1/invoices/${id}/preview`, { responseType: "blob" }),
+  reprocess: (id: string, data?: { template_id?: string; skip_template?: boolean }) =>
+    api.post(`/api/v1/invoices/${id}/reprocess`, data ?? {}),
   upload: (clientId: string, files: File[], onProgress?: (pct: number) => void) => {
     const formData = new FormData();
     formData.append("client_id", clientId);
@@ -111,6 +113,8 @@ export const templatesApi = {
     }),
   previewSample: (id: string) =>
     api.get(`/api/v1/templates/${id}/preview`, { responseType: "blob" }),
+  fromInvoice: (invoiceId: string, data: unknown) =>
+    api.post(`/api/v1/templates/from-invoice/${invoiceId}`, data),
 };
 
 // Users

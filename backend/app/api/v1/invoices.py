@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Body
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
@@ -268,6 +269,45 @@ def get_audit_log(
             r.user_name = log.user.full_name
         result.append(r)
     return result
+
+
+class ReprocessRequest(BaseModel):
+    template_id: Optional[str] = None
+    skip_template: bool = False
+
+
+@router.post("/{invoice_id}/reprocess")
+def reprocess_invoice(
+    invoice_id: str,
+    req: ReprocessRequest = Body(default=ReprocessRequest()),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Queue an invoice for reprocessing — optionally with a specific template or skipping template matching."""
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id, Invoice.org_id == current_user.org_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    invoice.status = InvoiceStatus.pending
+    invoice.validation_errors = []
+    invoice.template_id = None
+
+    log = InvoiceAuditLog(
+        org_id=current_user.org_id,
+        invoice_id=invoice.id,
+        user_id=current_user.id,
+        action="reprocess_queued",
+        new_value=f"template_id={req.template_id}, skip={req.skip_template}",
+    )
+    db.add(log)
+    db.commit()
+
+    process_invoice_task.delay(
+        str(invoice.id),
+        force_template_id=req.template_id,
+        skip_template=req.skip_template,
+    )
+    return {"queued": True, "invoice_id": invoice_id}
 
 
 @router.get("/{invoice_id}/preview-url")
