@@ -39,11 +39,15 @@ class StorageService:
         return data
 
     def get_presigned_url(self, object_name: str, expires_hours: int = 2) -> str:
-        return self.client.presigned_get_object(
+        url = self.client.presigned_get_object(
             settings.MINIO_BUCKET,
             object_name,
             expires=timedelta(hours=expires_hours),
         )
+        # Replace the internal Docker hostname with the public URL so the
+        # browser can actually reach it (minio:9000 → localhost:9000).
+        internal = f"http{'s' if settings.MINIO_SECURE else ''}://{settings.MINIO_ENDPOINT}"
+        return url.replace(internal, settings.MINIO_PUBLIC_URL, 1)
 
     def delete(self, object_name: str):
         try:

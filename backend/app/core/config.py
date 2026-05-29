@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str
     MINIO_BUCKET: str = "taxocr-invoices"
     MINIO_SECURE: bool = False
+    # Public URL used in presigned links sent to the browser.
+    # Must be reachable from the user's machine (not the internal Docker hostname).
+    MINIO_PUBLIC_URL: str = "http://localhost:9000"
 
     CORS_ORIGINS: str = '["http://localhost:3000"]'
     ENVIRONMENT: str = "development"
