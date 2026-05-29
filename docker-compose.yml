@@ -97,7 +97,9 @@ services:
       - "3000:3000"
     depends_on:
       - backend
-    command: npm run dev
+    # Build once at startup then serve the compiled output — navigation is instant.
+    # npm run dev compiles every page on first visit (2-5 s each on Windows/Docker).
+    command: sh -c "npm run build && npm start"
 
 volumes:
   postgres_data:
