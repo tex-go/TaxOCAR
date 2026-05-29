@@ -1,13 +1,29 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+const SESSION_KEY = "taxocr_session";
+
+function getToken(): string | undefined {
+  // Primary: cookie
+  const cookie = Cookies.get("token");
+  if (cookie) return cookie;
+  // Fallback: localStorage (same data, more reliable across port boundaries)
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) return JSON.parse(raw)?.access_token;
+    } catch {}
+  }
+  return undefined;
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001",
   timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {
-  const token = Cookies.get("token");
+  const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -19,7 +35,10 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       Cookies.remove("token");
-      window.location.href = "/login";
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(SESSION_KEY);
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(err);
   }
