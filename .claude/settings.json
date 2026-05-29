@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: replace libgl1-mesa-glx with libgl1 for Debian 12 Bookworm compatibility *)",
+      "Bash(git commit -m 'fix: remap backend host port 8000 -> 8001 to avoid conflict *)"
+    ]
+  }
+}

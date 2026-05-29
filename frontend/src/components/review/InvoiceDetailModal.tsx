@@ -6,7 +6,7 @@ import {
   X, ExternalLink, AlertTriangle, Clock, Check,
   ChevronDown, ChevronUp
 } from "lucide-react";
-import { invoicesApi } from "@/lib/api";
+import api, { invoicesApi } from "@/lib/api";
 import { formatDate, statusColor, statusLabel } from "@/lib/utils";
 import { isReviewer } from "@/lib/auth";
 import type { Invoice, AuditLog } from "@/types";
@@ -45,9 +45,22 @@ export default function InvoiceDetailModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    invoicesApi.getPreviewUrl(invoice.id)
-      .then((r) => setPreviewUrl(r.data.url))
+    let objectUrl: string | null = null;
+    const mime =
+      invoice.file_type === "pdf" ? "application/pdf"
+      : invoice.file_type === "png" ? "image/png"
+      : "image/jpeg";
+
+    api.get(`/api/v1/invoices/${invoice.id}/preview`, { responseType: "blob" })
+      .then((r) => {
+        const blob = new Blob([r.data], { type: mime });
+        objectUrl = URL.createObjectURL(blob);
+        setPreviewUrl(objectUrl);
+      })
       .catch(() => {});
+
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoice.id]);
 
   const { data: auditLogs } = useQuery<AuditLog[]>({

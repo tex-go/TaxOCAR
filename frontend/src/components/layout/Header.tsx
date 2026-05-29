@@ -9,6 +9,7 @@ const pageMeta: Record<string, { title: string; sub: string }> = {
   "/upload":              { title: "Upload Invoices",   sub: "Drag & drop PDFs or images for instant OCR" },
   "/review":              { title: "Review Invoices",   sub: "Validate, edit and approve extracted data" },
   "/exports":             { title: "Exports",           sub: "Download GST-ready Excel and CSV reports" },
+  "/templates":           { title: "Templates",          sub: "Per-vendor extraction templates with canvas annotation" },
   "/settings":            { title: "Settings",          sub: "Configure users, templates and preferences" },
   "/settings/users":      { title: "User Management",  sub: "Manage team members and roles" },
   "/settings/templates":  { title: "Invoice Templates", sub: "Define extraction rules per vendor" },

@@ -78,6 +78,7 @@ export const invoicesApi = {
   bulkApprove: (ids: string[]) => api.post("/api/v1/invoices/bulk-approve", ids),
   getAuditLog: (id: string) => api.get(`/api/v1/invoices/${id}/audit`),
   getPreviewUrl: (id: string) => api.get(`/api/v1/invoices/${id}/preview-url`),
+  preview: (id: string) => api.get(`/api/v1/invoices/${id}/preview`, { responseType: "blob" }),
   upload: (clientId: string, files: File[], onProgress?: (pct: number) => void) => {
     const formData = new FormData();
     formData.append("client_id", clientId);
@@ -104,6 +105,12 @@ export const templatesApi = {
     api.post("/api/v1/templates/with-sample", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  updateWithSample: (id: string, formData: FormData) =>
+    api.put(`/api/v1/templates/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  previewSample: (id: string) =>
+    api.get(`/api/v1/templates/${id}/preview`, { responseType: "blob" }),
 };
 
 // Users

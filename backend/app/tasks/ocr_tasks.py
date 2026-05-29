@@ -4,7 +4,7 @@ from app.models.invoice import Invoice, InvoiceStatus, InvoiceAuditLog
 from app.services.storage import StorageService
 from app.services.validation import validate_invoice
 from app.ocr.extractor import process_invoice_file
-from app.ocr.template_matcher import find_template, apply_template_patterns
+from app.ocr.template_matcher import find_template, apply_template_patterns, apply_template_coordinates
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,10 +42,20 @@ def process_invoice_task(self, invoice_id: str):
 
         if template:
             invoice.template_id = template.id
+
+            # Coordinate extraction (most accurate — crops exact regions)
+            if template.coordinates:
+                coord_fields = apply_template_coordinates(file_data, invoice.file_type, template)
+                fields.update(coord_fields)
+                for field in coord_fields:
+                    field_confidence[field] = 97.0
+
+            # Regex pattern overrides (fill gaps not covered by coordinates)
             overrides = apply_template_patterns(result["raw_text"], template)
             fields.update(overrides)
             for field in overrides:
-                field_confidence[field] = 95.0  # Template-matched fields get high confidence
+                if field not in field_confidence or field_confidence[field] < 95.0:
+                    field_confidence[field] = 95.0
 
         # Set fields on invoice
         for field, value in fields.items():

@@ -73,13 +73,24 @@ def extract_from_image(data: bytes) -> Tuple[str, float]:
 def _run_tesseract(image_bytes: bytes) -> Tuple[str, float]:
     try:
         img = Image.open(io.BytesIO(image_bytes))
-        config = "--oem 3 --psm 6 -l eng"
+        # PSM 11 (sparse text) handles varied invoice layouts — tables, columns,
+        # multi-section headers — far better than PSM 6 (uniform text block).
+        config = "--oem 3 --psm 11 -l eng"
         data = pytesseract.image_to_data(img, config=config, output_type=pytesseract.Output.DICT)
-
-        words = [w for w, c in zip(data["text"], data["conf"]) if int(c) > 0 and w.strip()]
         confs = [int(c) for c in data["conf"] if int(c) > 0]
         text = pytesseract.image_to_string(img, config=config)
         avg_conf = sum(confs) / len(confs) if confs else 0.0
+
+        # If PSM 11 extracted very little, retry with PSM 3 (auto page segmentation)
+        if len(text.strip()) < 80:
+            cfg3 = "--oem 3 --psm 3 -l eng"
+            text3 = pytesseract.image_to_string(img, config=cfg3)
+            if len(text3.strip()) > len(text.strip()):
+                data3 = pytesseract.image_to_data(img, config=cfg3, output_type=pytesseract.Output.DICT)
+                confs3 = [int(c) for c in data3["conf"] if int(c) > 0]
+                text = text3
+                avg_conf = sum(confs3) / len(confs3) if confs3 else avg_conf
+
         return text, avg_conf
     except Exception:
         return "", 0.0

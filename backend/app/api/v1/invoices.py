@@ -283,3 +283,32 @@ def get_preview_url(
     storage = StorageService()
     url = storage.get_presigned_url(invoice.file_path)
     return {"url": url}
+
+
+_MIME = {"pdf": "application/pdf", "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png"}
+
+
+@router.get("/{invoice_id}/preview")
+def preview_invoice(
+    invoice_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream the invoice file through the backend — avoids presigned-URL host issues."""
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id, Invoice.org_id == current_user.org_id).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    storage = StorageService()
+    try:
+        data = storage.download(invoice.file_path)
+    except Exception:
+        raise HTTPException(status_code=404, detail="File not found in storage")
+
+    content_type = _MIME.get(invoice.file_type, "application/octet-stream")
+    safe_name = invoice.original_filename.replace('"', "")
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type=content_type,
+        headers={"Content-Disposition": f'inline; filename="{safe_name}"'},
+    )

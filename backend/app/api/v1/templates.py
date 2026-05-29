@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
+import io
 
 from app.db.session import get_db
 from app.api.deps import get_current_user, require_admin
@@ -102,6 +104,33 @@ def update_template(
     db.commit()
     db.refresh(t)
     return t
+
+
+_TMPL_MIME = {"pdf": "application/pdf", "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg"}
+
+
+@router.get("/{template_id}/preview")
+def preview_template_sample(
+    template_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream the template's sample invoice image through the backend."""
+    t = db.query(InvoiceTemplate).filter(
+        InvoiceTemplate.id == template_id, InvoiceTemplate.org_id == current_user.org_id
+    ).first()
+    if not t or not t.sample_image_path:
+        raise HTTPException(status_code=404, detail="No sample image")
+
+    storage = StorageService()
+    try:
+        data = storage.download(t.sample_image_path)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Sample image not found in storage")
+
+    ext = t.sample_image_path.rsplit(".", 1)[-1].lower() if "." in t.sample_image_path else "jpg"
+    content_type = _TMPL_MIME.get(ext, "image/jpeg")
+    return StreamingResponse(io.BytesIO(data), media_type=content_type)
 
 
 @router.delete("/{template_id}", status_code=204)

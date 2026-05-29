@@ -3,18 +3,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users2, Upload, ClipboardCheck,
-  FileSpreadsheet, Settings, LogOut, Zap,
+  FileSpreadsheet, Settings, LogOut, Zap, Layers,
 } from "lucide-react";
 import { clearSession, getSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/clients",   label: "Clients",    icon: Users2 },
-  { href: "/upload",    label: "Upload",     icon: Upload },
-  { href: "/review",    label: "Review",     icon: ClipboardCheck },
-  { href: "/exports",   label: "Exports",    icon: FileSpreadsheet },
-  { href: "/settings",  label: "Settings",   icon: Settings },
+  { href: "/dashboard",  label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/clients",    label: "Clients",    icon: Users2 },
+  { href: "/upload",     label: "Upload",     icon: Upload },
+  { href: "/review",     label: "Review",     icon: ClipboardCheck },
+  { href: "/templates",  label: "Templates",  icon: Layers },
+  { href: "/exports",    label: "Exports",    icon: FileSpreadsheet },
+  { href: "/settings",   label: "Settings",   icon: Settings },
 ];
 
 export default function Sidebar() {
